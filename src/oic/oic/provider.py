@@ -985,6 +985,21 @@ class Provider(AProvider):
                 return error_response('invalid_request', descr='Missing redirect_uri')
             if req["redirect_uri"] != _info["redirect_uri"]:
                 return error_response("invalid_request", descr="redirect_uri mismatch")
+        
+        from oic.extension.provider import Provider as oauth_provider
+        authzreq = json.loads(_info['authzreq'])
+        if 'code_challenge' in authzreq:
+            code_challenge = authzreq['code_challenge']
+            if 'code_verifier' not in req:
+                return error_response('invalid_request', descr='Missing code_verifier')
+            code_verifier = req['code_verifier']
+            if 'code_challenge_method' in req:
+                code_challenge_method = req['code_challenge_method']
+            else:
+                code_challenge_method='S256'
+            res = oauth_provider.verify_code_challenge(code_verifier, code_challenge, code_challenge_method)
+            if res is not True:
+                return res
 
         _log_debug("All checks OK")
 
