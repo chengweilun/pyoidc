@@ -876,7 +876,19 @@ class SessionDB(object):
 
     def get_sids_by_sub(self, sub):
         sids = itertools.chain.from_iterable(self.uid2sid.values())
-        return [sid for sid in sids if self._db[sid]["sub"] == sub]
+        live_sids = []
+        for sid in sids:
+            try:
+                temp_sub = self._db[sid]["sub"]
+            except:
+                for key in self.uid2sid.keys():
+                    if sid in self.uid2sid[key]:
+                        self.uid2sid[key].remove(sid)
+                        break
+            else:
+                if temp_sub == sub:
+                    live_sids.append(sid)
+        return live_sids
 
     def duplicate(self, sinfo):
         _dic = copy.copy(sinfo)
